@@ -1,0 +1,502 @@
+<title>카프카 핵심 가이드 1장 미리보기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: sticky chapter index on the left, one reading column; a partition log motif (numbered offset cells) recurs as the visual thread */
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --fg: #1d2421;
+  --muted: #5d6963;
+  --line: #d9dfdb;
+  --accent: #0f7a5c;
+  --accent-soft: #e2f1eb;
+  --warn: #9a5a00;
+  --warn-soft: #fbf0dc;
+  --cell: #eef1ef;
+  --p0: #0f7a5c; --p1: #3d5fa8; --p2: #a8473d; --p3: #7b5aa6; --p4: #8a6d12; --p5: #2f7f8f;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141917; --surface: #1b2220; --fg: #e3e8e5; --muted: #98a59f; --line: #2c3532;
+    --accent: #4fc49b; --accent-soft: #1c3229; --warn: #e3a94a; --warn-soft: #33281a; --cell: #232c29;
+    --p0: #4fc49b; --p1: #7d9be0; --p2: #e08277; --p3: #b394e0; --p4: #d4b24a; --p5: #5fbccc;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141917; --surface: #1b2220; --fg: #e3e8e5; --muted: #98a59f; --line: #2c3532;
+  --accent: #4fc49b; --accent-soft: #1c3229; --warn: #e3a94a; --warn-soft: #33281a; --cell: #232c29;
+  --p0: #4fc49b; --p1: #7d9be0; --p2: #e08277; --p3: #b394e0; --p4: #d4b24a; --p5: #5fbccc;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.75; padding-inline: 16px; padding-block: 32px 80px; }
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 56px; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 24px; } nav.toc { position: static !important; } }
+
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; font-size: 14px; }
+nav.toc .label { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+nav.toc a { display: flex; gap: 10px; color: var(--muted); text-decoration: none; padding: 4px 8px; border-radius: 4px; }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--fg); background: var(--cell); outline: none; }
+nav.toc a span { font-family: var(--font-mono); font-size: 12px; color: var(--accent); min-width: 26px; padding-top: 2px; }
+
+main { min-width: 0; max-width: 720px; }
+header.hero { padding-bottom: 28px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.25; margin: 8px 0 16px; text-wrap: balance; font-weight: 700; }
+.thesis { font-size: 18px; color: var(--fg); margin: 0; }
+.thesis b { color: var(--accent); font-weight: 700; }
+
+section { padding-block: 36px 8px; scroll-margin-top: 16px; }
+h2 { font-size: 24px; line-height: 1.35; margin: 0 0 6px; text-wrap: balance; display: flex; gap: 12px; align-items: baseline; }
+h2 .no { font-family: var(--font-mono); font-size: 14px; color: var(--accent); font-weight: 600; }
+.sub { color: var(--muted); margin: 0 0 20px; }
+h3 { font-size: 18px; margin: 32px 0 8px; }
+p { margin: 0 0 14px; }
+ul { margin: 0 0 14px; padding-left: 20px; }
+li { margin-bottom: 4px; }
+code { font-family: var(--font-mono); font-size: .88em; background: var(--cell); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+.star { color: var(--accent); font-weight: 700; }
+
+.tbl { overflow-x: auto; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; font-family: var(--font-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { white-space: nowrap; font-weight: 500; }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 18px 0; font-size: 15px; }
+.callout.exam { background: var(--accent-soft); }
+.callout.diff { background: var(--warn-soft); }
+.callout .tag { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px; }
+.callout.exam .tag { color: var(--accent); }
+.callout.diff .tag { color: var(--warn); }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+
+/* compare diagram */
+.compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 8px 0 18px; }
+.compare figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+.compare figcaption { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+.compare figcaption small { display: block; color: var(--muted); font-weight: 400; }
+.compare svg { width: 100%; height: auto; display: block; }
+.compare svg text { font-family: var(--font-mono); font-size: 12px; fill: var(--fg); }
+.compare svg .node { fill: var(--cell); stroke: var(--line); }
+.compare svg .hub { fill: var(--accent-soft); stroke: var(--accent); }
+.compare svg .edge { stroke: var(--muted); stroke-width: 1.2; fill: none; }
+.compare svg .edge.bad { stroke: var(--p2); opacity: .7; }
+
+/* partition logs */
+.logbox { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin: 8px 0 18px; overflow-x: auto; }
+.logbox .topic { font-family: var(--font-mono); font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.logbox .topic b { color: var(--fg); font-weight: 600; }
+.prow { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; min-width: max-content; }
+.prow .pn { font-family: var(--font-mono); font-size: 12px; width: 26px; color: var(--muted); }
+.cells { display: flex; gap: 3px; }
+.cell { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; width: 34px; height: 30px; display: grid; place-items: center; border-radius: 3px; background: var(--cell); color: var(--muted); }
+.cell.new { border: 1px dashed var(--line); background: transparent; }
+.prow .arrow { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.legend { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+/* interactive panels */
+.lab { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin: 8px 0 20px; }
+.lab .lab-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 4px; }
+.lab p.hint { font-size: 14px; color: var(--muted); margin-bottom: 14px; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: end; margin-bottom: 16px; }
+.controls label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.controls input[type=text] { font-family: var(--font-mono); font-size: 14px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); width: 180px; }
+.controls input:focus-visible, .controls button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.controls button { font-family: var(--font-body); font-size: 14px; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent); color: var(--bg); cursor: pointer; font-weight: 500; }
+.controls button.ghost { background: transparent; color: var(--accent); }
+.stepper { display: flex; align-items: center; gap: 8px; }
+.stepper button { width: 32px; height: 32px; padding: 0; }
+.stepper output { font-family: var(--font-mono); font-size: 16px; min-width: 20px; text-align: center; font-variant-numeric: tabular-nums; }
+.result { font-size: 14px; color: var(--muted); margin-top: 10px; min-height: 1.5em; }
+.result b { color: var(--fg); }
+.k { display: inline-block; font-family: var(--font-mono); font-size: 11px; color: #fff; border-radius: 3px; padding: 0 5px; line-height: 30px; height: 30px; min-width: 34px; text-align: center; }
+@media (prefers-reduced-motion: no-preference) { .cell.pop { animation: pop .35s ease-out; } @keyframes pop { from { transform: scale(.6); opacity: .2; } to { transform: none; opacity: 1; } } }
+
+.group { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.consumer { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: var(--bg); }
+.consumer .cname { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.consumer .chips { display: flex; flex-wrap: wrap; gap: 4px; min-height: 26px; }
+.chip { font-family: var(--font-mono); font-size: 12px; color: #fff; padding: 2px 8px; border-radius: 4px; }
+.consumer.idle { border-style: dashed; }
+.consumer.idle .chips::after { content: "할당 없음 (대기)"; font-size: 12px; color: var(--muted); }
+
+.brokers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 8px 0 18px; }
+.broker { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; }
+.broker .bname { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.replica { font-family: var(--font-mono); font-size: 12px; padding: 5px 8px; border-radius: 4px; margin-bottom: 4px; display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+.replica.leader { background: var(--accent); color: var(--bg); font-weight: 600; }
+.replica.follower { background: var(--cell); color: var(--muted); }
+
+.pipeline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 18px; font-family: var(--font-mono); font-size: 13px; }
+.pipeline .box { border: 1px solid var(--line); background: var(--surface); padding: 8px 12px; border-radius: 6px; }
+.pipeline .box.kafka { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.pipeline .via { color: var(--muted); font-size: 12px; }
+
+.quiz { counter-reset: q; list-style: none; padding: 0; display: grid; gap: 10px; }
+.quiz li { counter-increment: q; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px 12px 52px; position: relative; margin: 0; }
+.quiz li::before { content: "Q" counter(q); position: absolute; left: 16px; top: 13px; font-family: var(--font-mono); font-size: 13px; color: var(--accent); font-weight: 600; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+</style>
+
+<div class="wrap">
+  <nav class="toc" aria-label="목차">
+    <div class="label">1장 목차</div>
+    <ol>
+      <li><a href="#s11"><span>1.1</span>발행/구독</a></li>
+      <li><a href="#s12"><span>1.2</span>카프카 입문</a></li>
+      <li><a href="#s13"><span>1.3</span>왜 카프카인가</a></li>
+      <li><a href="#s14"><span>1.4</span>데이터 생태계</a></li>
+      <li><a href="#s15"><span>1.5</span>카프카의 기원</a></li>
+      <li><a href="#quiz"><span>Q</span>자가 점검</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">CCAAK · Fundamentals 15% · 읽기 전 미리보기</div>
+      <h1>카프카 시작하기</h1>
+      <p class="thesis">카프카는 여러 시스템이 데이터를 주고받는 <b>중앙 우체국</b>이고, 받은 편지를 버리지 않고 순서대로 쌓아두는 <b>기록 장부</b>다.</p>
+    </header>
+
+    <!-- 1.1 -->
+    <section id="s11">
+      <h2><span class="no">1.1</span>발행/구독 메시지 전달</h2>
+      <p class="sub">왜 중간에 무언가를 두는가</p>
+
+      <p>처음엔 서버 A가 지표를 서버 B로 바로 보낸다. 간단하다. 그런데 보내는 쪽과 받는 쪽이 늘어나면 연결선이 <code>보내는 쪽 수 × 받는 쪽 수</code>만큼 늘어난다.</p>
+
+      <div class="compare">
+        <figure>
+          <figcaption>직접 연결<small>3 × 3 = 연결 9개, 하나 추가할 때마다 전부 수정</small></figcaption>
+          <svg viewBox="0 0 260 150" role="img" aria-label="보내는 쪽 3개와 받는 쪽 3개가 모두 직접 연결된 그림">
+            <g class="edges">
+              <path class="edge bad" d="M50 25 L210 25 M50 25 L210 75 M50 25 L210 125 M50 75 L210 25 M50 75 L210 75 M50 75 L210 125 M50 125 L210 25 M50 125 L210 75 M50 125 L210 125"/>
+            </g>
+            <rect class="node" x="14" y="12" width="40" height="26" rx="4"/><text x="34" y="29" text-anchor="middle">A</text>
+            <rect class="node" x="14" y="62" width="40" height="26" rx="4"/><text x="34" y="79" text-anchor="middle">C</text>
+            <rect class="node" x="14" y="112" width="40" height="26" rx="4"/><text x="34" y="129" text-anchor="middle">D</text>
+            <rect class="node" x="206" y="12" width="40" height="26" rx="4"/><text x="226" y="29" text-anchor="middle">B</text>
+            <rect class="node" x="206" y="62" width="40" height="26" rx="4"/><text x="226" y="79" text-anchor="middle">E</text>
+            <rect class="node" x="206" y="112" width="40" height="26" rx="4"/><text x="226" y="129" text-anchor="middle">F</text>
+          </svg>
+        </figure>
+        <figure>
+          <figcaption>발행/구독<small>3 + 3 = 연결 6개, 서로를 몰라도 된다</small></figcaption>
+          <svg viewBox="0 0 260 150" role="img" aria-label="보내는 쪽과 받는 쪽이 가운데 카프카 하나에만 연결된 그림">
+            <path class="edge" d="M54 25 L100 75 M54 75 L100 75 M54 125 L100 75 M160 75 L206 25 M160 75 L206 75 M160 75 L206 125"/>
+            <rect class="node" x="14" y="12" width="40" height="26" rx="4"/><text x="34" y="29" text-anchor="middle">A</text>
+            <rect class="node" x="14" y="62" width="40" height="26" rx="4"/><text x="34" y="79" text-anchor="middle">C</text>
+            <rect class="node" x="14" y="112" width="40" height="26" rx="4"/><text x="34" y="129" text-anchor="middle">D</text>
+            <rect class="hub" x="100" y="56" width="60" height="38" rx="6"/><text x="130" y="79" text-anchor="middle">Kafka</text>
+            <rect class="node" x="206" y="12" width="40" height="26" rx="4"/><text x="226" y="29" text-anchor="middle">B</text>
+            <rect class="node" x="206" y="62" width="40" height="26" rx="4"/><text x="226" y="79" text-anchor="middle">E</text>
+            <rect class="node" x="206" y="112" width="40" height="26" rx="4"/><text x="226" y="129" text-anchor="middle">F</text>
+          </svg>
+        </figure>
+      </div>
+
+      <ul>
+        <li><b>발행자(publisher)</b>는 누가 받을지 모른 채 게시판에 글을 올린다.</li>
+        <li><b>구독자(subscriber)</b>는 관심 있는 주제의 글만 가져간다.</li>
+        <li>서로 몰라도 되니 결합도가 낮아진다.</li>
+      </ul>
+      <p>그런데 지표용 큐, 로그용 큐, 사용자 활동용 큐처럼 게시판이 용도별로 또 여러 개 생긴다. <b>범용 게시판 하나로 전부 처리하자</b>는 것이 카프카의 출발점이다.</p>
+    </section>
+
+    <!-- 1.2 -->
+    <section id="s12">
+      <h2><span class="no">1.2</span>카프카 입문</h2>
+      <p class="sub">이후 모든 장에서 쓰이는 용어. 이 절이 1장의 핵심이다.</p>
+
+      <h3>메시지와 배치</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>용어</th><th>비유</th><th>설명</th></tr></thead>
+        <tbody>
+          <tr><td>메시지</td><td>편지 한 통</td><td>카프카의 데이터 단위. 카프카는 내용을 해석하지 않고 바이트 배열로만 다룬다.</td></tr>
+          <tr><td>키</td><td>봉투의 주소</td><td>선택값. 같은 키는 같은 파티션으로 가게 하는 데 쓴다.</td></tr>
+          <tr><td>배치</td><td>우체통에 모았다가 한 번에 수거</td><td>같은 토픽·파티션으로 갈 메시지를 묶어서 보낸다.</td></tr>
+        </tbody>
+      </table></div>
+      <p>배치는 <b>처리량과 지연의 맞교환</b>이다. 크게 묶으면 네트워크 왕복이 줄어 처리량이 오르지만 메시지 하나가 기다리는 시간은 늘어난다. 3장에서 <code>linger.ms</code>, <code>batch.size</code>로 다시 나온다.</p>
+
+      <h3>스키마</h3>
+      <p>카프카는 메시지 내용을 모르기 때문에 보내는 쪽과 받는 쪽이 형식을 약속해야 한다. JSON은 읽기 쉽지만 타입이 느슨하고 형식이 바뀌면 깨지기 쉽다. 책은 스키마가 바뀌어도 호환성을 유지하는 <b>Avro</b>를 권한다. 스키마를 한곳에 모아두는 저장소가 <b>Schema Registry</b>이고, kiwi-lab에도 띄워져 있다.</p>
+
+      <h3>토픽과 파티션 <span class="star">★</span></h3>
+      <p><b>토픽</b>은 메시지를 분류하는 이름(DB의 테이블에 해당)이고, <b>파티션</b>은 토픽을 쪼갠 단위다. 파티션 하나는 끝에만 덧붙이고 처음부터 순서대로 읽는 <b>커밋 로그</b>다. 각 칸의 번호가 <b>오프셋</b>이다.</p>
+
+      <div class="logbox" aria-label="파티션 3개짜리 토픽 그림">
+        <div class="topic">토픽 <b>debezium.mysql.local.testdb.orders</b></div>
+        <div class="prow"><span class="pn">P0</span><div class="cells"><span class="cell">0</span><span class="cell">1</span><span class="cell">2</span><span class="cell">3</span><span class="cell new"></span></div><span class="arrow">← 쓰기는 항상 끝에</span></div>
+        <div class="prow"><span class="pn">P1</span><div class="cells"><span class="cell">0</span><span class="cell">1</span><span class="cell">2</span><span class="cell new"></span></div></div>
+        <div class="prow"><span class="pn">P2</span><div class="cells"><span class="cell">0</span><span class="cell">1</span><span class="cell">2</span><span class="cell">3</span><span class="cell">4</span><span class="cell new"></span></div></div>
+        <div class="legend">칸 안의 숫자 = 오프셋. 파티션마다 0부터 따로 센다.</div>
+      </div>
+
+      <div class="callout exam">
+        <span class="tag">시험 포인트</span>
+        <ul>
+          <li><b>순서는 파티션 안에서만 보장된다.</b> 토픽 전체 순서는 보장되지 않는다.</li>
+          <li>파티션을 여러 브로커에 나눠 두면 <b>확장성</b>, 복제해 두면 <b>가용성</b>을 얻는다.</li>
+          <li><b>스트림</b>은 보통 파티션 수와 무관하게 토픽 하나의 데이터 흐름을 가리킨다.</li>
+        </ul>
+      </div>
+
+      <h3>프로듀서와 컨슈머</h3>
+      <p><b>프로듀서</b>는 메시지를 쓰는 쪽이다. 키가 없으면 파티션에 고르게 퍼뜨리고, 키가 있으면 키의 해시값으로 파티션을 고른다. 그래서 <b>같은 키는 항상 같은 파티션</b>에 들어가고, 그 키의 순서가 지켜진다.</p>
+
+      <div class="lab" id="lab-key">
+        <div class="lab-title">직접 해보기 · 키 → 파티션</div>
+        <p class="hint">카프카 기본 파티셔너와 같은 murmur2 해시로 계산한다. 같은 주문 ID를 여러 번 보내면 늘 같은 줄에 쌓이는 걸 확인해보자.</p>
+        <div class="controls">
+          <label for="keyInput">메시지 키<input type="text" id="keyInput" value="order-1001" autocomplete="off"></label>
+          <div><div style="font-size:13px;color:var(--muted);margin-bottom:4px">파티션 수</div>
+            <div class="stepper"><button type="button" class="ghost" id="pMinus" aria-label="파티션 줄이기">−</button><output id="pCount">3</output><button type="button" class="ghost" id="pPlus" aria-label="파티션 늘리기">+</button></div></div>
+          <button type="button" id="sendBtn">보내기</button>
+          <button type="button" class="ghost" id="clearBtn">비우기</button>
+        </div>
+        <div class="logbox" id="keyLog" style="margin:0"></div>
+        <div class="result" id="keyResult" aria-live="polite"></div>
+      </div>
+
+      <p><b>컨슈머</b>는 메시지를 쓰인 순서대로 읽는다. 어디까지 읽었는지는 <b>오프셋</b>으로 기억하는데, 일종의 책갈피다. 컨슈머가 재시작해도 저장된 오프셋부터 이어 읽는다.</p>
+
+      <h3>컨슈머 그룹 <span class="star">★</span></h3>
+      <p>여러 컨슈머가 한 팀(그룹)이 되어 토픽을 나눠 읽는다. 규칙은 하나다. <b>그룹 안에서 파티션 하나는 컨슈머 하나만 읽는다.</b></p>
+
+      <div class="lab" id="lab-group">
+        <div class="lab-title">직접 해보기 · 컨슈머 그룹</div>
+        <p class="hint">파티션 4개짜리 토픽을 그룹 하나가 읽는다. 컨슈머 수를 바꿔보면 파티션이 다시 나눠진다(리밸런스, 4장).</p>
+        <div class="controls">
+          <div><div style="font-size:13px;color:var(--muted);margin-bottom:4px">컨슈머 수</div>
+            <div class="stepper"><button type="button" class="ghost" id="cMinus" aria-label="컨슈머 줄이기">−</button><output id="cCount">3</output><button type="button" class="ghost" id="cPlus" aria-label="컨슈머 늘리기">+</button></div></div>
+        </div>
+        <div class="group" id="groupView"></div>
+        <div class="result" id="groupResult" aria-live="polite"></div>
+      </div>
+
+      <ul>
+        <li>컨슈머 하나가 죽으면 그 파티션을 남은 컨슈머가 나눠 가진다.</li>
+        <li>컨슈머가 파티션보다 많으면 남는 컨슈머는 논다.</li>
+        <li><b>다른 그룹</b>은 같은 토픽을 서로 간섭 없이 처음부터 다 읽을 수 있다. 일반 큐와 가장 다른 점이다.</li>
+      </ul>
+
+      <h3>브로커와 클러스터</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>용어</th><th>설명</th></tr></thead>
+        <tbody>
+          <tr><td>브로커</td><td>카프카 서버 한 대. 메시지를 받아 오프셋을 붙이고 디스크에 저장하며, 컨슈머의 읽기 요청에 응답한다.</td></tr>
+          <tr><td>클러스터</td><td>브로커 여러 대의 묶음.</td></tr>
+          <tr><td>컨트롤러</td><td>클러스터 관리자. 파티션을 어느 브로커에 둘지 정하고 브로커 장애를 감지한다.</td></tr>
+          <tr><td>리더</td><td>파티션마다 하나. 쓰기와 (기본적으로) 읽기를 맡는다.</td></tr>
+          <tr><td>팔로워</td><td>리더를 복제만 하다가, 리더가 죽으면 그중 하나가 새 리더가 된다.</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="brokers" aria-label="브로커 3대에 파티션 3개의 리더와 팔로워가 나뉘어 있는 그림">
+        <div class="broker"><div class="bname">브로커 1</div><div class="replica leader">P0<span>리더</span></div><div class="replica follower">P1<span>팔로워</span></div><div class="replica follower">P2<span>팔로워</span></div></div>
+        <div class="broker"><div class="bname">브로커 2</div><div class="replica follower">P0<span>팔로워</span></div><div class="replica leader">P1<span>리더</span></div><div class="replica follower">P2<span>팔로워</span></div></div>
+        <div class="broker"><div class="bname">브로커 3</div><div class="replica follower">P0<span>팔로워</span></div><div class="replica follower">P1<span>팔로워</span></div><div class="replica leader">P2<span>리더</span></div></div>
+      </div>
+      <p>리더를 브로커마다 골고루 두어 부하를 나눈다. 브로커 1이 죽으면 P0의 리더는 브로커 2나 3의 팔로워가 이어받는다.</p>
+
+      <h3>보존(retention)</h3>
+      <p>카프카는 컨슈머가 읽어도 메시지를 바로 지우지 않는다. 대신 정해진 기준에 따라 오래된 것부터 지운다.</p>
+      <div class="tbl"><table>
+        <thead><tr><th>방식</th><th>기준</th><th>어울리는 데이터</th></tr></thead>
+        <tbody>
+          <tr><td>시간 기준</td><td>예: 7일이 지나면 삭제</td><td>로그, 이벤트처럼 일정 기간만 필요한 것</td></tr>
+          <tr><td>크기 기준</td><td>예: 파티션이 1GB를 넘으면 오래된 것부터 삭제</td><td>디스크 용량을 지켜야 할 때</td></tr>
+          <tr><td>로그 압착</td><td>같은 키의 마지막 값만 남김</td><td>사용자별 최신 상태처럼 "현재 값"만 필요한 것 (6장)</td></tr>
+        </tbody>
+      </table></div>
+
+      <div class="callout diff">
+        <span class="tag">책과 현재 버전 차이</span>
+        <p>책(2판)은 <b>ZooKeeper</b>가 컨트롤러를 뽑고 클러스터 메타데이터를 저장한다고 설명한다. Kafka 4.0부터 ZooKeeper는 완전히 제거되었고, 브로커 중 일부가 컨트롤러 역할을 맡아 메타데이터를 카프카 로그로 관리하는 <b>KRaft</b>만 쓴다. kiwi-lab 클러스터도 <code>strimzi.io/kraft: enabled</code>인 KRaft 클러스터다. 시험에는 KRaft 문제가 나오므로 6장에서 따로 보강한다.</p>
+      </div>
+
+      <h3>다중 클러스터</h3>
+      <p>클러스터를 여러 개 두는 이유는 세 가지다.</p>
+      <ul>
+        <li><b>데이터 종류 분리</b>: 용도별로 격리한다.</li>
+        <li><b>보안 요구사항 분리</b>: 민감한 데이터는 별도 클러스터에 둔다.</li>
+        <li><b>다중 데이터센터</b>: 재해 복구나 지역별 서비스에 쓴다.</li>
+      </ul>
+      <p>클러스터 사이에 데이터를 복사하는 도구가 <b>미러메이커(MirrorMaker)</b>다. 원리는 한쪽에서 읽어서 다른 쪽에 쓰는 것뿐이다. 10장에서 자세히 다룬다.</p>
+    </section>
+
+    <!-- 1.3 -->
+    <section id="s13">
+      <h2><span class="no">1.3</span>왜 카프카인가?</h2>
+      <p class="sub">다른 메시지 시스템 대신 카프카를 고르는 이유</p>
+      <div class="tbl"><table>
+        <thead><tr><th>장점</th><th>의미</th></tr></thead>
+        <tbody>
+          <tr><td>다중 프로듀서</td><td>여러 시스템이 같은 토픽에 동시에 쓸 수 있다.</td></tr>
+          <tr><td>다중 컨슈머</td><td>여러 그룹이 같은 데이터를 서로 간섭 없이 읽는다. 일반 큐는 한 명이 읽으면 사라진다.</td></tr>
+          <tr><td>디스크 기반 보존</td><td>컨슈머가 느리거나 잠시 죽어도 데이터가 남아 있어서, 나중에 따라잡으면 된다.</td></tr>
+          <tr><td>확장성</td><td>브로커 한 대로 시작해 운영 중단 없이 늘릴 수 있다.</td></tr>
+          <tr><td>고성능</td><td>순차 디스크 쓰기와 배치 덕분에 대용량에서도 지연이 낮다.</td></tr>
+          <tr><td>플랫폼 기능</td><td>Kafka Connect(외부 시스템 연동), Kafka Streams(스트림 처리) 같은 도구가 함께 있다.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- 1.4 -->
+    <section id="s14">
+      <h2><span class="no">1.4</span>데이터 생태계</h2>
+      <p class="sub">카프카는 시스템 사이를 잇는 순환계 역할을 한다</p>
+      <p>kiwi-lab이 바로 이 구조다.</p>
+      <div class="pipeline" aria-label="MySQL에서 Debezium을 거쳐 카프카, S3 Sink를 거쳐 MinIO로 가는 흐름">
+        <span class="box">MySQL</span><span class="via">Debezium →</span><span class="box kafka">Kafka</span><span class="via">S3 Sink →</span><span class="box">MinIO (S3)</span>
+      </div>
+      <div class="tbl"><table>
+        <thead><tr><th>사용 사례</th><th>예시</th></tr></thead>
+        <tbody>
+          <tr><td>활동 추적</td><td>클릭, 페이지뷰 같은 사용자 행동 수집. 링크드인이 카프카를 만든 원래 목적.</td></tr>
+          <tr><td>메시지 교환</td><td>이메일, 알림 발송 요청 전달.</td></tr>
+          <tr><td>지표·로그 수집</td><td>여러 서버의 로그를 한곳으로 모은다.</td></tr>
+          <tr><td>커밋 로그</td><td>DB 변경사항(CDC)을 흘려보내 다른 시스템에 복제한다. Debezium이 하는 일.</td></tr>
+          <tr><td>스트림 처리</td><td>흐르는 데이터를 실시간으로 집계·변환한다 (14장).</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- 1.5 -->
+    <section id="s15">
+      <h2><span class="no">1.5</span>카프카의 기원</h2>
+      <p class="sub">가볍게 읽고 넘어가도 되는 절</p>
+      <ul>
+        <li>링크드인에서 사용자 활동과 지표 수집 문제를 풀려고 만들었다. 제이 크렙스, 네하 나크헤데, 준 라오가 주도했다.</li>
+        <li>2011년 오픈소스로 공개되어 아파치 프로젝트가 됐다. 이후 창시자들이 이 시험을 주관하는 <b>Confluent</b>를 세웠다.</li>
+        <li>이름은 작가 프란츠 카프카에서 따왔다. 쓰기에 최적화된 시스템이라 작가 이름이 어울린다는 이유였다.</li>
+      </ul>
+    </section>
+
+    <section id="quiz">
+      <h2><span class="no">Q</span>자가 점검</h2>
+      <p class="sub">1장을 읽은 뒤 이 질문으로 퀴즈를 진행한다</p>
+      <ol class="quiz">
+        <li>보낸 순서와 다르게 메시지를 받았다. 왜 그럴 수 있고, 특정 주문 ID의 순서를 지키려면 어떻게 하나?</li>
+        <li>파티션 3개짜리 토픽을 컨슈머 5개짜리 그룹이 읽으면 어떻게 되나?</li>
+        <li>일반 메시지 큐와 카프카의 가장 큰 차이 두 가지는?</li>
+        <li>리더와 팔로워의 역할은? 리더가 있는 브로커가 죽으면?</li>
+        <li>시간 기준 보존과 로그 압착은 각각 어떤 데이터에 어울리나?</li>
+        <li>책의 ZooKeeper 설명은 Kafka 4.x에서 어떻게 바뀌었나?</li>
+      </ol>
+    </section>
+
+    <footer>교재: 카프카 핵심 가이드 2판 1장 · 예시 환경: kiwi-lab (Strimzi, Kafka 4.1 KRaft)</footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  var COLORS = ['--p0','--p1','--p2','--p3','--p4','--p5'];
+  function color(i) { return 'var(' + COLORS[i % COLORS.length] + ')'; }
+
+  // Kafka's murmur2 (org.apache.kafka.common.utils.Utils.murmur2)
+  function murmur2(bytes) {
+    var len = bytes.length, m = 0x5bd1e995, r = 24;
+    var h = (0x9747b28c ^ len) | 0;
+    var n4 = len >> 2;
+    for (var i = 0; i < n4; i++) {
+      var o = i * 4;
+      var k = (bytes[o] & 0xff) | ((bytes[o+1] & 0xff) << 8) | ((bytes[o+2] & 0xff) << 16) | ((bytes[o+3] & 0xff) << 24);
+      k = Math.imul(k, m); k ^= k >>> r; k = Math.imul(k, m);
+      h = Math.imul(h, m); h ^= k;
+    }
+    var t = len & ~3;
+    switch (len % 4) {
+      case 3: h ^= (bytes[t+2] & 0xff) << 16;
+      case 2: h ^= (bytes[t+1] & 0xff) << 8;
+      case 1: h ^= bytes[t] & 0xff; h = Math.imul(h, m);
+    }
+    h ^= h >>> 13; h = Math.imul(h, m); h ^= h >>> 15;
+    return h | 0;
+  }
+  function partitionFor(key, n) {
+    var bytes = new TextEncoder().encode(key);
+    return (murmur2(bytes) & 0x7fffffff) % n;
+  }
+
+  // key -> partition lab
+  var parts = 3, logs = [];
+  var keyInput = document.getElementById('keyInput');
+  var keyLog = document.getElementById('keyLog');
+  var keyResult = document.getElementById('keyResult');
+  var pCount = document.getElementById('pCount');
+  var keyColors = {}, nextColor = 0;
+  function reset() { logs = []; for (var i = 0; i < parts; i++) logs.push([]); }
+  function renderLog(popP) {
+    var html = '';
+    for (var i = 0; i < parts; i++) {
+      html += '<div class="prow"><span class="pn">P' + i + '</span><div class="cells">';
+      logs[i].forEach(function (k, off) {
+        var last = (i === popP && off === logs[i].length - 1);
+        html += '<span class="cell' + (last ? ' pop' : '') + '" title="' + k.replace(/"/g,'&quot;') + ' · offset ' + off + '" style="background:' + keyColors[k] + ';color:#fff">' + off + '</span>';
+      });
+      html += '<span class="cell new"></span></div></div>';
+    }
+    keyLog.innerHTML = html;
+  }
+  function send() {
+    var k = keyInput.value.trim();
+    if (!k) { keyResult.innerHTML = '키를 입력하면 파티션이 정해진다. 실제로는 키 없이 보낼 수도 있다.'; return; }
+    if (!(k in keyColors)) keyColors[k] = color(nextColor++);
+    var p = partitionFor(k, parts);
+    logs[p].push(k);
+    renderLog(p);
+    keyResult.innerHTML = '<b>' + k.replace(/</g,'&lt;') + '</b> → <b>P' + p + '</b>, 오프셋 <b>' + (logs[p].length - 1) + '</b>. 같은 키는 계속 P' + p + '로 간다.';
+  }
+  document.getElementById('sendBtn').addEventListener('click', send);
+  keyInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') send(); });
+  document.getElementById('clearBtn').addEventListener('click', function () { reset(); renderLog(-1); keyResult.textContent = ''; });
+  function setParts(n) {
+    parts = Math.max(1, Math.min(6, n)); pCount.textContent = parts;
+    reset(); renderLog(-1);
+    keyResult.innerHTML = '파티션 수를 바꾸면 <code>hash % 파티션 수</code>가 달라져 같은 키도 다른 파티션으로 갈 수 있다. 그래서 운영 중 파티션 추가는 키 순서에 영향을 준다.';
+  }
+  document.getElementById('pMinus').addEventListener('click', function () { setParts(parts - 1); });
+  document.getElementById('pPlus').addEventListener('click', function () { setParts(parts + 1); });
+  reset();
+  ['order-1001','order-1002','order-1001','order-2077','order-1001'].forEach(function (k) {
+    if (!(k in keyColors)) keyColors[k] = color(nextColor++);
+    logs[partitionFor(k, parts)].push(k);
+  });
+  renderLog(-1);
+  keyResult.innerHTML = '예시로 order-1001을 세 번 보냈다. 세 번 모두 같은 파티션에 쌓였다. 칸에 마우스를 올리면 키가 보인다.';
+
+  // consumer group lab
+  var P = 4, consumers = 3;
+  var cCount = document.getElementById('cCount');
+  var groupView = document.getElementById('groupView');
+  var groupResult = document.getElementById('groupResult');
+  function renderGroup() {
+    cCount.textContent = consumers;
+    var assign = []; for (var c = 0; c < consumers; c++) assign.push([]);
+    for (var p = 0; p < P; p++) assign[p % consumers].push(p);
+    groupView.innerHTML = assign.map(function (ps, c) {
+      return '<div class="consumer' + (ps.length ? '' : ' idle') + '"><div class="cname">컨슈머 ' + String.fromCharCode(65 + c) + '</div><div class="chips">' +
+        ps.map(function (p) { return '<span class="chip" style="background:' + color(p) + '">P' + p + '</span>'; }).join('') + '</div></div>';
+    }).join('');
+    var idle = Math.max(0, consumers - P);
+    groupResult.innerHTML = consumers === 1 ? '컨슈머 하나가 파티션 4개를 전부 읽는다.'
+      : idle ? '컨슈머가 파티션보다 많아서 <b>' + idle + '개</b>는 할당을 못 받고 대기한다. 파티션 수가 그룹의 병렬 처리 한계다.'
+      : '파티션 4개를 컨슈머 ' + consumers + '개가 나눠 읽는다. 파티션 하나를 두 컨슈머가 함께 읽는 일은 없다.';
+  }
+  document.getElementById('cMinus').addEventListener('click', function () { consumers = Math.max(1, consumers - 1); renderGroup(); });
+  document.getElementById('cPlus').addEventListener('click', function () { consumers = Math.min(6, consumers + 1); renderGroup(); });
+  renderGroup();
+})();
+</script>
