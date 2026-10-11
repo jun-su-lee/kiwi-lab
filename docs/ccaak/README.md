@@ -28,7 +28,7 @@ Confluent Certified Administrator for Apache Kafka. 교재: **카프카 핵심 �
 | 장 | 제목 | CCAAK 관련도 | 노트 |
 |---|---|---|---|
 | 1 | 카프카 시작하기 | ★★ 기본 용어 | [미리보기](https://claude.ai/artifact/Pg6nPwxLVVgSaRd61iN7TH) · [ch01](ch01-getting-started.md) ✅ 21/30 |
-| 2 | 카프카 설치하기 | ★★★ 브로커·토픽 설정 | |
+| 2 | 카프카 설치하기 | ★★★ 브로커·토픽 설정 | [미리보기](https://claude.ai/artifact/9NdjZbmLhGm5Fuw9bmcMv5) 🔄 |
 | 3 | 카프카 프로듀서 | ★★ acks, 배치, 재시도 | |
 | 4 | 카프카 컨슈머 | ★★★ 그룹, 리밸런스, 오프셋 | |
 | 5 | 코드로 카프카 관리하기 | ★ AdminClient | |

@@ -1,0 +1,523 @@
+<title>카프카 핵심 가이드 2장 미리보기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: sticky chapter index on the left, one reading column; a partition log motif (numbered offset cells) recurs as the visual thread */
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --fg: #1d2421;
+  --muted: #5d6963;
+  --line: #d9dfdb;
+  --accent: #0f7a5c;
+  --accent-soft: #e2f1eb;
+  --warn: #9a5a00;
+  --warn-soft: #fbf0dc;
+  --cell: #eef1ef;
+  --p0: #0f7a5c; --p1: #3d5fa8; --p2: #a8473d; --p3: #7b5aa6; --p4: #8a6d12; --p5: #2f7f8f;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141917; --surface: #1b2220; --fg: #e3e8e5; --muted: #98a59f; --line: #2c3532;
+    --accent: #4fc49b; --accent-soft: #1c3229; --warn: #e3a94a; --warn-soft: #33281a; --cell: #232c29;
+    --p0: #4fc49b; --p1: #7d9be0; --p2: #e08277; --p3: #b394e0; --p4: #d4b24a; --p5: #5fbccc;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141917; --surface: #1b2220; --fg: #e3e8e5; --muted: #98a59f; --line: #2c3532;
+  --accent: #4fc49b; --accent-soft: #1c3229; --warn: #e3a94a; --warn-soft: #33281a; --cell: #232c29;
+  --p0: #4fc49b; --p1: #7d9be0; --p2: #e08277; --p3: #b394e0; --p4: #d4b24a; --p5: #5fbccc;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 16px; line-height: 1.75; padding-inline: 16px; padding-block: 32px 80px; }
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 56px; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); gap: 24px; } nav.toc { position: static !important; } }
+
+nav.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 24px); align-self: start; font-size: 14px; }
+nav.toc .label { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+nav.toc a { display: flex; gap: 10px; color: var(--muted); text-decoration: none; padding: 4px 8px; border-radius: 4px; }
+nav.toc a:hover, nav.toc a:focus-visible { color: var(--fg); background: var(--cell); outline: none; }
+nav.toc a span { font-family: var(--font-mono); font-size: 12px; color: var(--accent); min-width: 26px; padding-top: 2px; }
+
+main { min-width: 0; max-width: 720px; }
+header.hero { padding-bottom: 28px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); }
+h1 { font-size: clamp(28px, 5vw, 40px); line-height: 1.25; margin: 8px 0 16px; text-wrap: balance; font-weight: 700; }
+.thesis { font-size: 18px; color: var(--fg); margin: 0; }
+.thesis b { color: var(--accent); font-weight: 700; }
+
+section { padding-block: 36px 8px; scroll-margin-top: 16px; }
+h2 { font-size: 24px; line-height: 1.35; margin: 0 0 6px; text-wrap: balance; display: flex; gap: 12px; align-items: baseline; }
+h2 .no { font-family: var(--font-mono); font-size: 14px; color: var(--accent); font-weight: 600; }
+.sub { color: var(--muted); margin: 0 0 20px; }
+h3 { font-size: 18px; margin: 32px 0 8px; }
+p { margin: 0 0 14px; }
+ul { margin: 0 0 14px; padding-left: 20px; }
+li { margin-bottom: 4px; }
+code { font-family: var(--font-mono); font-size: .88em; background: var(--cell); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+.star { color: var(--accent); font-weight: 700; }
+
+.tbl { overflow-x: auto; margin: 0 0 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; font-family: var(--font-mono); letter-spacing: .05em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { white-space: nowrap; font-weight: 500; }
+
+.callout { border-radius: 8px; padding: 14px 18px; margin: 18px 0; font-size: 15px; }
+.callout.exam { background: var(--accent-soft); }
+.callout.diff { background: var(--warn-soft); }
+.callout .tag { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 4px; }
+.callout.exam .tag { color: var(--accent); }
+.callout.diff .tag { color: var(--warn); }
+.callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+
+/* compare diagram */
+.compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 8px 0 18px; }
+.compare figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+.compare figcaption { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+.compare figcaption small { display: block; color: var(--muted); font-weight: 400; }
+.compare svg { width: 100%; height: auto; display: block; }
+.compare svg text { font-family: var(--font-mono); font-size: 12px; fill: var(--fg); }
+.compare svg .node { fill: var(--cell); stroke: var(--line); }
+.compare svg .hub { fill: var(--accent-soft); stroke: var(--accent); }
+.compare svg .edge { stroke: var(--muted); stroke-width: 1.2; fill: none; }
+.compare svg .edge.bad { stroke: var(--p2); opacity: .7; }
+
+/* partition logs */
+.logbox { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin: 8px 0 18px; overflow-x: auto; }
+.logbox .topic { font-family: var(--font-mono); font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.logbox .topic b { color: var(--fg); font-weight: 600; }
+.prow { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; min-width: max-content; }
+.prow .pn { font-family: var(--font-mono); font-size: 12px; width: 26px; color: var(--muted); }
+.cells { display: flex; gap: 3px; }
+.cell { font-family: var(--font-mono); font-size: 12px; font-variant-numeric: tabular-nums; width: 34px; height: 30px; display: grid; place-items: center; border-radius: 3px; background: var(--cell); color: var(--muted); }
+.cell.new { border: 1px dashed var(--line); background: transparent; }
+.prow .arrow { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.legend { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+/* interactive panels */
+.lab { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; margin: 8px 0 20px; }
+.lab .lab-title { font-family: var(--font-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 4px; }
+.lab p.hint { font-size: 14px; color: var(--muted); margin-bottom: 14px; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: end; margin-bottom: 16px; }
+.controls label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.controls input[type=text] { font-family: var(--font-mono); font-size: 14px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); width: 180px; }
+.controls input:focus-visible, .controls button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.controls button { font-family: var(--font-body); font-size: 14px; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent); color: var(--bg); cursor: pointer; font-weight: 500; }
+.controls button.ghost { background: transparent; color: var(--accent); }
+.stepper { display: flex; align-items: center; gap: 8px; }
+.stepper button { width: 32px; height: 32px; padding: 0; }
+.stepper output { font-family: var(--font-mono); font-size: 16px; min-width: 20px; text-align: center; font-variant-numeric: tabular-nums; }
+.result { font-size: 14px; color: var(--muted); margin-top: 10px; min-height: 1.5em; }
+.result b { color: var(--fg); }
+.k { display: inline-block; font-family: var(--font-mono); font-size: 11px; color: #fff; border-radius: 3px; padding: 0 5px; line-height: 30px; height: 30px; min-width: 34px; text-align: center; }
+@media (prefers-reduced-motion: no-preference) { .cell.pop { animation: pop .35s ease-out; } @keyframes pop { from { transform: scale(.6); opacity: .2; } to { transform: none; opacity: 1; } } }
+
+.group { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.consumer { border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: var(--bg); }
+.consumer .cname { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.consumer .chips { display: flex; flex-wrap: wrap; gap: 4px; min-height: 26px; }
+.chip { font-family: var(--font-mono); font-size: 12px; color: #fff; padding: 2px 8px; border-radius: 4px; }
+.consumer.idle { border-style: dashed; }
+.consumer.idle .chips::after { content: "할당 없음 (대기)"; font-size: 12px; color: var(--muted); }
+
+.brokers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 8px 0 18px; }
+.broker { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-width: 0; }
+.broker .bname { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.replica { font-family: var(--font-mono); font-size: 12px; padding: 5px 8px; border-radius: 4px; margin-bottom: 4px; display: flex; justify-content: space-between; gap: 6px; flex-wrap: wrap; }
+.replica.leader { background: var(--accent); color: var(--bg); font-weight: 600; }
+.replica.follower { background: var(--cell); color: var(--muted); }
+
+.pipeline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 18px; font-family: var(--font-mono); font-size: 13px; }
+.pipeline .box { border: 1px solid var(--line); background: var(--surface); padding: 8px 12px; border-radius: 6px; }
+.pipeline .box.kafka { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+.pipeline .via { color: var(--muted); font-size: 12px; }
+
+.quiz { counter-reset: q; list-style: none; padding: 0; display: grid; gap: 10px; }
+.quiz li { counter-increment: q; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px 12px 52px; position: relative; margin: 0; }
+.quiz li::before { content: "Q" counter(q); position: absolute; left: 16px; top: 13px; font-family: var(--font-mono); font-size: 13px; color: var(--accent); font-weight: 600; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+</style>
+<style>
+.cfg { display: grid; gap: 10px; margin: 8px 0 20px; }
+.cfg-item { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; min-width: 0; }
+.cfg-head { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: baseline; justify-content: space-between; }
+.cfg-key { font-family: var(--font-mono); font-size: 14px; font-weight: 600; color: var(--fg); overflow-wrap: anywhere; }
+.cfg-def { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.cfg-def b { color: var(--accent); font-weight: 600; }
+.cfg-item p { font-size: 15px; margin: 6px 0 0; }
+.cfg-item .lab-note { font-size: 13px; color: var(--muted); margin-top: 6px; }
+.cfg-item.kraft { border-color: var(--warn); }
+.cfg-item.kraft .cfg-def b { color: var(--warn); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 8px 0 18px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; min-width: 0; }
+.panel h4 { margin: 0 0 6px; font-size: 15px; }
+.panel ul { margin: 0; font-size: 14px; }
+.calc-row { display: flex; flex-wrap: wrap; gap: 12px 18px; margin-bottom: 14px; }
+.calc-row label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.calc-row input[type=number], .calc-row select { font-family: var(--font-mono); font-size: 14px; padding: 7px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); width: 120px; }
+.calc-row input:focus-visible, .calc-row select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.big { font-family: var(--font-mono); font-size: 28px; font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+.formula { font-family: var(--font-mono); font-size: 13px; color: var(--muted); overflow-x: auto; white-space: nowrap; padding-bottom: 2px; }
+.isr-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 10px; }
+.rep { font-family: var(--font-mono); font-size: 12px; border-radius: 6px; padding: 8px 10px; min-width: 76px; text-align: center; border: 1px solid var(--line); background: var(--cell); color: var(--fg); cursor: pointer; }
+.rep.down { background: transparent; color: var(--muted); border-style: dashed; text-decoration: line-through; }
+.rep:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.verdict { font-size: 15px; padding: 10px 14px; border-radius: 6px; }
+.verdict.ok { background: var(--accent-soft); color: var(--fg); }
+.verdict.bad { background: var(--warn-soft); color: var(--fg); }
+.timeline { overflow-x: auto; margin: 8px 0 18px; }
+.seg-row { display: flex; gap: 4px; min-width: 520px; }
+.seg { flex: 1; border-radius: 4px; padding: 8px 6px; font-family: var(--font-mono); font-size: 11px; text-align: center; background: var(--cell); color: var(--muted); }
+.seg.del { background: transparent; border: 1px dashed var(--line); text-decoration: line-through; }
+.seg.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+</style>
+
+<div class="wrap">
+  <nav class="toc" aria-label="목차">
+    <div class="label">2장 목차</div>
+    <ol>
+      <li><a href="#s21"><span>2.1</span>환경 설정</a></li>
+      <li><a href="#s22"><span>2.2</span>브로커 설치</a></li>
+      <li><a href="#s23"><span>2.3</span>브로커 설정</a></li>
+      <li><a href="#s24"><span>2.4</span>하드웨어</a></li>
+      <li><a href="#s25"><span>2.5</span>클라우드</a></li>
+      <li><a href="#s26"><span>2.6</span>클러스터 설정</a></li>
+      <li><a href="#s27"><span>2.7</span>프로덕션 고려사항</a></li>
+      <li><a href="#quiz"><span>Q</span>자가 점검</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <div class="eyebrow">CCAAK · Cluster Configuration 22% · 읽기 전 미리보기</div>
+      <h1>카프카 설치하기</h1>
+      <p class="thesis">2장은 <b>설정값 사전</b>이다. 설정 이름, 기본값, 그리고 "그 값을 바꾸면 무슨 일이 생기나"를 외워야 하는 장이고, 시험에서 비중이 가장 큰 도메인과 바로 이어진다.</p>
+    </header>
+
+    <!-- 2.1 -->
+    <section id="s21">
+      <h2><span class="no">2.1</span>환경 설정하기</h2>
+      <p class="sub">운영체제, 자바, 그리고 (책 기준) 주키퍼</p>
+      <ul>
+        <li><b>운영체제</b>: 리눅스를 권장한다. 운영 환경 대부분이 리눅스이고, 뒤에 나오는 커널 튜닝도 리눅스 기준이다.</li>
+        <li><b>자바</b>: 카프카는 JVM 위에서 돈다. Kafka 4.0부터 브로커는 Java 17 이상, 클라이언트는 Java 11 이상이 필요하다.</li>
+        <li><b>주키퍼</b>: 책은 브로커보다 주키퍼를 먼저 띄운다. 단독 서버 하나로도 되지만, 운영에서는 3대 또는 5대의 <b>앙상블</b>을 쓴다. 과반수가 살아야 동작하기 때문에 홀수로 구성한다.</li>
+      </ul>
+      <div class="callout diff">
+        <span class="tag">책과 현재 버전 차이</span>
+        <p>Kafka 4.x에는 주키퍼가 없다. 주키퍼 앙상블 대신 <b>KRaft 컨트롤러 쿼럼</b>을 띄운다. "과반수가 살아야 하니 홀수로"라는 원리는 1장 복습에서 본 KRaft와 똑같다. 주키퍼 설치 절은 원리만 이해하고 넘어가면 된다.</p>
+      </div>
+    </section>
+
+    <!-- 2.2 -->
+    <section id="s22">
+      <h2><span class="no">2.2</span>카프카 브로커 설치하기</h2>
+      <p class="sub">압축 풀고, 설정 파일 고치고, 실행</p>
+      <p>책의 흐름은 단순하다. 배포판 압축을 풀고 <code>config/server.properties</code>를 고친 뒤 <code>kafka-server-start.sh</code>로 띄운다. 그다음 토픽을 만들고, 콘솔 프로듀서로 쓰고, 콘솔 컨슈머로 읽어서 동작을 확인한다.</p>
+      <div class="logbox" style="font-family:var(--font-mono);font-size:13px;line-height:1.9">
+        <div><span style="color:var(--muted)"># KRaft (4.x) 기준 설치 순서</span></div>
+        <div>kafka-storage.sh random-uuid <span style="color:var(--muted)">→ 클러스터 ID 생성</span></div>
+        <div>kafka-storage.sh format -t &lt;클러스터ID&gt; -c server.properties</div>
+        <div>kafka-server-start.sh server.properties</div>
+        <div>kafka-topics.sh --create --topic test --partitions 3 --replication-factor 1 --bootstrap-server localhost:9092</div>
+      </div>
+      <div class="callout exam">
+        <span class="tag">시험 포인트</span>
+        <p>KRaft에서는 브로커를 처음 띄우기 전에 <b><code>kafka-storage.sh format</code>으로 로그 디렉터리를 포맷</b>해야 한다. 이 단계에서 클러스터 ID가 기록된다. 주키퍼 시절에는 없던 단계라 책에는 없다. 또 CLI 도구는 <code>--zookeeper</code>가 아니라 <code>--bootstrap-server</code>로 브로커에 붙는다.</p>
+      </div>
+    </section>
+
+    <!-- 2.3 -->
+    <section id="s23">
+      <h2><span class="no">2.3</span>브로커 설정하기 <span class="star">★</span></h2>
+      <p class="sub">2장의 핵심. 설정 이름과 기본값을 같이 기억하자</p>
+
+      <h3>핵심 브로커 설정</h3>
+      <div class="cfg">
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">broker.id</span><span class="cfg-def">KRaft: <b>node.id</b></span></div>
+          <p>클러스터 안에서 브로커마다 겹치지 않아야 하는 정수 ID. 호스트 이름과 맞춰 두면 운영이 편하다(예: kafka3 → 3).</p>
+        </div>
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">listeners</span><span class="cfg-def">예: <b>PLAINTEXT://:9092</b></span></div>
+          <p>브로커가 연결을 받을 주소와 포트. <code>이름://호스트:포트</code> 형식이고 여러 개를 쉼표로 둘 수 있다. 이름과 보안 프로토콜의 짝은 <code>listener.security.protocol.map</code>으로 정한다. 클라이언트에게 알려줄 주소는 <code>advertised.listeners</code>로 따로 지정한다.</p>
+          <div class="lab-note">kiwi-lab: Strimzi가 <code>plain</code> 리스너(9092, TLS 없음)를 만든다.</div>
+        </div>
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">log.dirs</span><span class="cfg-def">기본 <b>/tmp/kafka-logs</b></span></div>
+          <p>메시지를 저장할 디렉터리. 여러 개를 쉼표로 줄 수 있다. 새 파티션은 <b>파티션 개수가 가장 적은 디렉터리</b>에 놓인다. 남은 디스크 용량 기준이 아니다.</p>
+        </div>
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">num.recovery.threads.per.data.dir</span><span class="cfg-def">기본 <b>1</b></span></div>
+          <p>브로커가 시작하거나 종료할 때 로그 세그먼트를 열고 닫는 스레드 수. <b>디렉터리마다</b> 이만큼 생긴다. 8로 두고 <code>log.dirs</code>가 3개면 스레드는 24개. 비정상 종료 뒤 재시작이 느릴 때 늘린다.</p>
+        </div>
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">auto.create.topics.enable</span><span class="cfg-def">기본 <b>true</b></span></div>
+          <p>없는 토픽에 프로듀서가 쓰거나, 컨슈머가 읽거나, 메타데이터를 요청하면 토픽을 자동으로 만든다. 오타 하나로 토픽이 생기므로 운영에서는 보통 끈다.</p>
+          <div class="lab-note">kiwi-lab: <code>"true"</code>로 켜져 있다(학습용).</div>
+        </div>
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">auto.leader.rebalance.enable</span><span class="cfg-def">기본 <b>true</b></span></div>
+          <p>리더가 한 브로커에 쏠리면 주기적으로 선호 리더(1장에서 본 원래 배치)로 되돌린다. 확인 주기는 <code>leader.imbalance.check.interval.seconds</code>(300초), 기준은 <code>leader.imbalance.per.broker.percentage</code>(10%).</p>
+        </div>
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">delete.topic.enable</span><span class="cfg-def">기본 <b>true</b></span></div>
+          <p>토픽 삭제 허용 여부. 실수로 지우는 걸 막고 싶으면 끈다.</p>
+        </div>
+        <div class="cfg-item kraft">
+          <div class="cfg-head"><span class="cfg-key">process.roles · controller.quorum.voters</span><span class="cfg-def">KRaft 전용 <b>책에 없음</b></span></div>
+          <p><code>process.roles</code>는 이 노드가 <code>broker</code>, <code>controller</code>, 또는 둘 다인지 정한다. 컨트롤러 쿼럼 구성원은 <code>controller.quorum.voters</code>(고정 목록) 또는 <code>controller.quorum.bootstrap.servers</code>로 알려준다. 컨트롤러끼리 쓰는 리스너 이름은 <code>controller.listener.names</code>.</p>
+          <div class="lab-note">kiwi-lab: <code>roles: [controller, broker]</code> → combined 모드.</div>
+        </div>
+      </div>
+
+      <h3>토픽별 기본값</h3>
+      <p>아래는 브로커에 두는 <b>기본값</b>이다. 토픽을 만들 때 토픽별로 덮어쓸 수 있고, 그때 이름이 조금 달라진다(예: 브로커 <code>log.retention.ms</code> → 토픽 <code>retention.ms</code>).</p>
+      <div class="cfg">
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">num.partitions</span><span class="cfg-def">기본 <b>1</b></span></div>
+          <p>자동 생성되는 토픽의 파티션 수. 파티션은 늘릴 수만 있고 줄일 수 없다(1장 복습 R4).</p>
+        </div>
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">default.replication.factor</span><span class="cfg-def">기본 <b>1</b></span></div>
+          <p>자동 생성되는 토픽의 복제 팩터. 책은 <code>min.insync.replicas</code>보다 최소 1 크게, 보통 3을 권한다. 1이면 브로커 하나만 죽어도 그 파티션은 끝이다.</p>
+          <div class="lab-note">kiwi-lab: 브로커가 1대라 1. 내부 토픽 <code>offsets.topic.replication.factor</code>(기본 3)도 1로 낮춰 두었다.</div>
+        </div>
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">log.retention.ms / minutes / hours</span><span class="cfg-def">기본 <b>168시간(7일)</b></span></div>
+          <p>메시지 보존 시간. 세 개를 같이 설정하면 <b>단위가 작은 쪽(ms)이 이긴다</b>.</p>
+        </div>
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">log.retention.bytes</span><span class="cfg-def">기본 <b>-1 (무제한)</b></span></div>
+          <p>보존 크기. <b>파티션 단위</b>다. 파티션 8개 토픽에 1GB로 두면 토픽 전체로는 최대 8GB. 시간과 크기를 둘 다 설정하면 <b>먼저 걸리는 쪽</b>으로 지운다.</p>
+        </div>
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">log.segment.bytes</span><span class="cfg-def">기본 <b>1GB</b></span></div>
+          <p>세그먼트 파일 하나의 최대 크기. 이 크기가 차면 세그먼트를 닫고 새로 연다. 보존 기간은 <b>닫힌 세그먼트 단위</b>로 적용된다.</p>
+        </div>
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">log.roll.ms / log.roll.hours</span><span class="cfg-def">기본 <b>168시간</b></span></div>
+          <p>크기와 상관없이 이 시간이 지나면 세그먼트를 닫는다. 크기와 시간 중 먼저 걸리는 쪽이 적용된다.</p>
+        </div>
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">min.insync.replicas</span><span class="cfg-def">기본 <b>1</b></span></div>
+          <p>프로듀서가 <code>acks=all</code>로 쓸 때, 최소 몇 개의 ISR이 메시지를 받아야 성공으로 칠지. 복제 팩터 3이면 보통 2로 둔다. ISR이 이보다 적으면 쓰기가 거부된다.</p>
+        </div>
+        <div class="cfg-item">
+          <div class="cfg-head"><span class="cfg-key">message.max.bytes</span><span class="cfg-def">기본 <b>약 1MB</b></span></div>
+          <p>브로커가 받는 메시지(배치) 최대 크기, 압축 후 기준. 토픽별로는 <code>max.message.bytes</code>. 늘리면 브로커 간 복제용 <code>replica.fetch.max.bytes</code>와 컨슈머의 fetch 크기도 함께 맞춰야 한다.</p>
+        </div>
+      </div>
+
+      <h3>보존은 세그먼트 단위로 지운다</h3>
+      <p>보존 7일이라고 메시지가 정확히 7일 뒤에 지워지는 게 아니다. 세그먼트가 <b>닫히고</b>, 그 세그먼트의 <b>마지막 메시지</b>가 7일이 지나야 세그먼트 파일째로 지운다. 1장 압착 질문에서 본 "활성 세그먼트는 건드리지 않는다"와 같은 원리다.</p>
+      <div class="timeline" aria-label="세그먼트 단위 삭제 그림">
+        <div class="seg-row">
+          <div class="seg del">세그먼트 0<br>9일 전</div>
+          <div class="seg del">세그먼트 1<br>8일 전</div>
+          <div class="seg">세그먼트 2<br>5일 전</div>
+          <div class="seg">세그먼트 3<br>2일 전</div>
+          <div class="seg active">활성 세그먼트<br>쓰는 중</div>
+        </div>
+      </div>
+
+      <div class="lab" id="lab-isr">
+        <div class="lab-title">직접 해보기 · 복제 팩터와 min.insync.replicas</div>
+        <p class="hint">레플리카를 눌러 브로커를 죽여 보자. <code>acks=all</code> 프로듀서의 쓰기가 성공하는지 확인한다.</p>
+        <div class="calc-row">
+          <label for="rfSel">복제 팩터<select id="rfSel"><option>1</option><option>2</option><option selected>3</option><option>4</option><option>5</option></select></label>
+          <label for="misrSel">min.insync.replicas<select id="misrSel"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option></select></label>
+        </div>
+        <div class="isr-row" id="isrRow"></div>
+        <div class="verdict" id="isrVerdict" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- 2.4 -->
+    <section id="s24">
+      <h2><span class="no">2.4</span>하드웨어 선택하기</h2>
+      <p class="sub">카프카는 디스크와 페이지 캐시로 먹고산다</p>
+      <div class="grid2">
+        <div class="panel"><h4>디스크 처리량</h4><ul><li>프로듀서 지연에 가장 직접 영향을 준다.</li><li>메시지가 디스크에 써져야 커밋되기 때문.</li><li>SSD가 유리, HDD는 여러 개로 나눠 쓴다.</li></ul></div>
+        <div class="panel"><h4>디스크 용량</h4><ul><li>하루 유입량 × 보존 기간 × 복제 팩터.</li><li>여유분 10% 이상을 더 잡는다.</li><li>아래 계산기로 감을 잡자.</li></ul></div>
+        <div class="panel"><h4>메모리</h4><ul><li>JVM 힙은 크지 않아도 된다(수 GB).</li><li>남는 메모리는 OS <b>페이지 캐시</b>로 쓰여 컨슈머 읽기를 빠르게 한다.</li><li>다른 애플리케이션과 같이 두지 않는다.</li></ul></div>
+        <div class="panel"><h4>네트워크 · CPU</h4><ul><li>나가는 트래픽이 들어오는 것보다 크다(복제 + 여러 컨슈머 그룹).</li><li>CPU는 주로 압축 해제·재압축에 쓰여 병목이 되는 일이 적다.</li></ul></div>
+      </div>
+
+      <div class="lab" id="lab-disk">
+        <div class="lab-title">직접 해보기 · 디스크 용량</div>
+        <p class="hint">하루 유입량과 보존 기간으로 클러스터 전체와 브로커당 필요한 디스크를 계산한다.</p>
+        <div class="calc-row">
+          <label for="dIn">하루 유입량 (GB)<input type="number" id="dIn" value="200" min="0" step="10"></label>
+          <label for="dDays">보존 (일)<input type="number" id="dDays" value="7" min="1"></label>
+          <label for="dRf">복제 팩터<input type="number" id="dRf" value="3" min="1" max="5"></label>
+          <label for="dBk">브로커 수<input type="number" id="dBk" value="6" min="1"></label>
+        </div>
+        <div class="grid2" style="margin:0">
+          <div><div style="font-size:13px;color:var(--muted)">클러스터 전체</div><div class="big" id="dTotal"></div></div>
+          <div><div style="font-size:13px;color:var(--muted)">브로커당</div><div class="big" id="dPer"></div></div>
+        </div>
+        <div class="formula" id="dFormula"></div>
+      </div>
+    </section>
+
+    <!-- 2.5 -->
+    <section id="s25">
+      <h2><span class="no">2.5</span>클라우드에서 카프카 사용하기</h2>
+      <p class="sub">가볍게 읽고 넘어가도 되는 절</p>
+      <p>Azure, AWS에서 인스턴스와 디스크를 고를 때도 기준은 같다. 보존할 데이터 양, 프로듀서가 요구하는 성능을 먼저 정하고 디스크 종류와 인스턴스를 고른다. 원격 디스크는 지연이 크고 로컬 디스크는 인스턴스와 함께 사라질 수 있다는 트레이드오프가 핵심이다. 관리형 서비스(Confluent Cloud 등)를 쓰면 이 고민을 맡길 수 있다.</p>
+    </section>
+
+    <!-- 2.6 -->
+    <section id="s26">
+      <h2><span class="no">2.6</span>카프카 클러스터 설정하기</h2>
+      <p class="sub">브로커 몇 대? 그리고 리눅스 튜닝</p>
+
+      <h3>브로커 수 정하기</h3>
+      <ul>
+        <li><b>디스크 용량</b>: 위 계산기의 클러스터 전체 용량 ÷ 브로커 한 대의 디스크.</li>
+        <li><b>레플리카 수</b>: 브로커 한 대가 감당하는 파티션 레플리카에는 한계가 있다. 책은 브로커당 약 14,000개, 클러스터 전체 약 100만 개 이하를 권한다.</li>
+        <li><b>네트워크·CPU</b>: 트래픽이 몰리는 시간대 기준으로 여유를 둔다.</li>
+      </ul>
+
+      <h3>파티션 수 정하기</h3>
+      <p>1장 Q2에서 이야기한 그 주제다. 목표 처리량을 파티션 하나의 처리량으로 나눠서 계산하고, 키를 쓰는 토픽이면 나중을 생각해 약간 여유를 둔다. 책은 디스크 기준으로 파티션 하나가 하루에 6GB를 넘지 않게 하라는 경험칙도 제시한다.</p>
+      <div class="lab" id="lab-part">
+        <div class="lab-title">직접 해보기 · 파티션 수</div>
+        <p class="hint">파티션 하나로 낼 수 있는 쓰기·읽기 처리량을 측정했다고 치고, 목표 처리량에 필요한 최소 파티션 수를 구한다.</p>
+        <div class="calc-row">
+          <label for="pT">목표 처리량 (MB/s)<input type="number" id="pT" value="100" min="1"></label>
+          <label for="pP">파티션당 쓰기 (MB/s)<input type="number" id="pP" value="20" min="1"></label>
+          <label for="pC">파티션당 읽기 (MB/s)<input type="number" id="pC" value="10" min="1"></label>
+        </div>
+        <div><div style="font-size:13px;color:var(--muted)">최소 파티션 수</div><div class="big" id="pOut"></div></div>
+        <div class="formula" id="pFormula"></div>
+      </div>
+
+      <h3>운영체제 튜닝</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>항목</th><th>설정</th><th>이유</th></tr></thead>
+        <tbody>
+          <tr><td>스왑</td><td><code>vm.swappiness=1</code></td><td>스왑은 성능을 크게 떨어뜨린다. 0이 아니라 1로 두어 OOM 킬러 대신 최소한의 스왑만 허용.</td></tr>
+          <tr><td>더티 페이지</td><td><code>vm.dirty_background_ratio=5</code><br><code>vm.dirty_ratio=60~80</code></td><td>백그라운드 플러시는 일찍 시작하고, 쓰기가 막히는 한계는 높게.</td></tr>
+          <tr><td>파일·맵</td><td>파일 디스크립터, <code>vm.max_map_count</code> 크게</td><td>세그먼트 파일과 인덱스 파일을 동시에 많이 연다.</td></tr>
+          <tr><td>파일시스템</td><td>XFS, <code>noatime</code> 마운트</td><td>XFS가 카프카 부하에 유리. 읽을 때마다 접근 시간을 기록하는 쓰기를 없앤다.</td></tr>
+          <tr><td>네트워크</td><td>소켓 송수신 버퍼 크게</td><td>브로커 간 복제와 대량 전송 처리량 확보.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <!-- 2.7 -->
+    <section id="s27">
+      <h2><span class="no">2.7</span>프로덕션 환경에서의 고려사항</h2>
+      <p class="sub">GC, 랙 배치, 주키퍼 공유</p>
+      <ul>
+        <li><b>GC</b>: G1GC를 쓴다. 책은 <code>MaxGCPauseMillis=20</code>, <code>InitiatingHeapOccupancyPercent=35</code>처럼 기본값보다 공격적인 값을 예로 든다. 힙은 크지 않게 두고 남는 메모리는 페이지 캐시에 양보한다.</li>
+        <li><b>랙 배치</b>: 브로커에 <code>broker.rack</code>을 지정하면 파티션을 만들 때 레플리카를 서로 다른 랙(클라우드라면 가용 영역)에 나눠 둔다. 랙 하나가 통째로 죽어도 파티션이 살아남는다.</li>
+        <li><b>주키퍼 공유</b>: 책은 여러 카프카 클러스터가 주키퍼 앙상블 하나를 같이 써도 되지만, 카프카 외 애플리케이션과 공유하지는 말라고 한다. KRaft에서는 해당 없음.</li>
+      </ul>
+      <div class="callout exam">
+        <span class="tag">시험 포인트</span>
+        <ul>
+          <li>보존 설정 우선순위: <code>ms</code> &gt; <code>minutes</code> &gt; <code>hours</code>.</li>
+          <li><code>log.retention.bytes</code>는 파티션 단위, 시간과 크기는 먼저 걸리는 쪽.</li>
+          <li><code>log.dirs</code>에 새 파티션은 파티션 수가 적은 디렉터리로.</li>
+          <li>복제 팩터 3 + <code>min.insync.replicas=2</code> + <code>acks=all</code>이 표준 조합. 브로커 1대 장애까지 쓰기 가능.</li>
+          <li>KRaft: <code>process.roles</code>, <code>node.id</code>, <code>controller.quorum.voters</code>, 첫 기동 전 <code>kafka-storage.sh format</code>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="quiz">
+      <h2><span class="no">Q</span>자가 점검</h2>
+      <p class="sub">2장을 읽은 뒤 이 질문으로 퀴즈를 진행한다</p>
+      <ol class="quiz">
+        <li><code>log.retention.hours=168</code>과 <code>log.retention.ms=3600000</code>을 같이 설정하면 보존 기간은?</li>
+        <li>파티션 10개 토픽에 <code>log.retention.bytes=1GB</code>를 설정했다. 이 토픽이 디스크에 최대 얼마까지 쌓일 수 있나?</li>
+        <li>복제 팩터 3, <code>min.insync.replicas=2</code>, <code>acks=all</code>에서 브로커가 몇 대까지 죽어도 쓰기가 되나?</li>
+        <li><code>log.dirs</code>에 디렉터리가 3개 있다. 새 파티션은 어디에 놓이나?</li>
+        <li>운영 환경에서 <code>auto.create.topics.enable</code>을 끄는 이유는?</li>
+        <li>KRaft 클러스터를 처음 띄울 때 브로커 시작 전에 꼭 해야 하는 단계는?</li>
+      </ol>
+    </section>
+
+    <footer>교재: 카프카 핵심 가이드 2판 2장 · 예시 환경: kiwi-lab (Strimzi, Kafka 4.1 KRaft, 단일 노드)</footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  // ISR simulator
+  var rfSel = document.getElementById('rfSel'), misrSel = document.getElementById('misrSel');
+  var row = document.getElementById('isrRow'), verdict = document.getElementById('isrVerdict');
+  var down = {};
+  function renderIsr() {
+    var rf = +rfSel.value, misr = +misrSel.value;
+    var html = '';
+    for (var i = 1; i <= rf; i++) {
+      var label = (i === 1 ? '리더' : '팔로워');
+      html += '<button type="button" class="rep' + (down[i] ? ' down' : '') + '" data-i="' + i + '" aria-pressed="' + (!!down[i]) + '">브로커 ' + i + '<br>' + (down[i] ? '장애' : label) + '</button>';
+    }
+    row.innerHTML = html;
+    var alive = 0; for (var j = 1; j <= rf; j++) if (!down[j]) alive++;
+    var tolerate = Math.max(0, rf - misr);
+    var msg;
+    if (misr > rf) {
+      verdict.className = 'verdict bad';
+      msg = 'min.insync.replicas(' + misr + ')가 복제 팩터(' + rf + ')보다 크다. 브로커가 모두 살아 있어도 acks=all 쓰기는 항상 실패한다.';
+    } else if (alive === 0) {
+      verdict.className = 'verdict bad';
+      msg = '레플리카가 모두 죽었다. 읽기도 쓰기도 불가능하다.';
+    } else if (alive >= misr) {
+      verdict.className = 'verdict ok';
+      msg = '<b>쓰기 성공.</b> ISR ' + alive + '개 ≥ min.insync.replicas ' + misr + '. 이 조합은 브로커 ' + tolerate + '대 장애까지 쓰기를 받는다.';
+    } else {
+      verdict.className = 'verdict bad';
+      msg = '<b>쓰기 거부</b> (NotEnoughReplicas). ISR ' + alive + '개 &lt; min.insync.replicas ' + misr + '. 남은 레플리카로 읽기는 계속된다.';
+    }
+    if (rf === 1) msg += ' 복제 팩터 1은 브로커 하나만 죽어도 데이터에 접근할 수 없다.';
+    verdict.innerHTML = msg;
+  }
+  row.addEventListener('click', function (e) {
+    var b = e.target.closest('.rep'); if (!b) return;
+    var i = +b.dataset.i; down[i] = !down[i]; renderIsr();
+  });
+  rfSel.addEventListener('change', function () { down = {}; renderIsr(); });
+  misrSel.addEventListener('change', renderIsr);
+  renderIsr();
+
+  // disk calculator
+  function fmt(gb) { return gb >= 1024 ? (gb / 1024).toFixed(1) + ' TB' : Math.round(gb) + ' GB'; }
+  var dIds = ['dIn','dDays','dRf','dBk'];
+  function renderDisk() {
+    var v = dIds.map(function (id) { return Math.max(0, +document.getElementById(id).value || 0); });
+    var total = v[0] * v[1] * v[2] * 1.1;
+    var per = v[3] ? total / v[3] : 0;
+    document.getElementById('dTotal').textContent = fmt(total);
+    document.getElementById('dPer').textContent = fmt(per);
+    document.getElementById('dFormula').textContent = v[0] + 'GB × ' + v[1] + '일 × RF ' + v[2] + ' × 1.1(여유) = ' + fmt(total) + '  ÷ 브로커 ' + v[3] + '대';
+  }
+  dIds.forEach(function (id) { document.getElementById(id).addEventListener('input', renderDisk); });
+  renderDisk();
+
+  // partition calculator
+  var pIds = ['pT','pP','pC'];
+  function renderPart() {
+    var t = +document.getElementById('pT').value || 0, p = +document.getElementById('pP').value || 1, c = +document.getElementById('pC').value || 1;
+    var a = Math.ceil(t / p), b = Math.ceil(t / c), n = Math.max(a, b);
+    document.getElementById('pOut').textContent = n + '개';
+    document.getElementById('pFormula').textContent = 'max(⌈' + t + '/' + p + '⌉, ⌈' + t + '/' + c + '⌉) = max(' + a + ', ' + b + ') = ' + n + (b > a ? '  → 읽기 쪽이 병목' : a > b ? '  → 쓰기 쪽이 병목' : '');
+  }
+  pIds.forEach(function (id) { document.getElementById(id).addEventListener('input', renderPart); });
+  renderPart();
+})();
+</script>
